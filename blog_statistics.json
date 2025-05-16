@@ -1,9 +1,9 @@
 {
     "total_blog_posts": 362,
     "averages": {
-        "Images per text": 1.32,
         "Internal Links Count": 0.87,
         "Outbound Links Count": 0.76,
+        "Images per Blog Post": 1.32,
         "Posts per Month": 10.69,
         "Days Between Posts": 5.89
     },
