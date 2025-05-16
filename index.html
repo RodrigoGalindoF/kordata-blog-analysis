@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Statistics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Circular+Std:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Airbnb-inspired color palette */
+            --primary: #FF5A5F;
+            --primary-light: #FF7A7F;
+            --primary-dark: #E31C5F;
+            --secondary: #484848;
+            --secondary-light: #767676;
+            --secondary-dark: #222222;
+            --background: #F7F7F7;
+            --surface: #FFFFFF;
+            --success: #008489;
+            --warning: #FFB400;
+            --danger: #FF5A5F;
+            --gray-100: #F7F7F7;
+            --gray-200: #EBEBEB;
+            --gray-300: #DDDDDD;
+            --gray-400: #767676;
+            --gray-500: #484848;
+            --gray-600: #222222;
+            
+            /* Spacing and sizing */
+            --container-padding: clamp(16px, 3vw, 24px);
+            --card-padding: clamp(20px, 4vw, 32px);
+            --chart-height: clamp(250px, 40vh, 300px);
+            --border-radius: 12px;
+            --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            --transition-speed: 0.2s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Circular Std', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-600);
+            background-color: var(--background);
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            padding: var(--container-padding);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(16px, 3vw, 24px);
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: var(--card-padding);
+            background-color: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            color: var(--gray-600);
+            margin-bottom: 8px;
+            font-size: clamp(1.75rem, 4vw, 2.25rem);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
+            gap: clamp(16px, 3vw, 24px);
+            padding: var(--container-padding);
+        }
+
+        .dashboard-card {
+            background-color: var(--surface);
+            border-radius: var(--border-radius);
+            padding: var(--card-padding);
+            box-shadow: var(--card-shadow);
+            width: 100%;
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .dashboard-card h2 {
+            color: var(--gray-600);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: var(--chart-height);
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+            gap: clamp(16px, 2vw, 24px);
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background-color: var(--gray-100);
+            padding: clamp(16px, 3vw, 24px);
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 600;
+            color: var(--primary);
+            margin: 8px 0;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-label {
+            color: var(--gray-500);
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-weight: 500;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: var(--card-padding);
+        }
+
+        .spinner {
+            border: 3px solid var(--gray-200);
+            width: clamp(32px, 6vw, 48px);
+            height: clamp(32px, 6vw, 48px);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: clamp(16px, 3vw, 24px);
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-weight: 500;
+        }
+
+        .alert-danger {
+            background-color: #FFF1F0;
+            border: 1px solid #FFCCC7;
+            color: var(--danger);
+        }
+
+        .alert-success {
+            background-color: #F6FFED;
+            border: 1px solid #B7EB8F;
+            color: var(--success);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                padding: 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .dashboard-card {
+                padding: 20px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background-color: white;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            .dashboard-card {
+                box-shadow: none;
+                border: 1px solid var(--gray-200);
+                break-inside: avoid;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Blog Statistics Dashboard</h1>
+        </header>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <div id="error-container" class="hidden"></div>
+
+        <div id="dashboard" class="dashboard-grid hidden">
+            <!-- Images per Text Section -->
+            <div class="dashboard-card">
+                <h2>Images per Text</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="images-per-text-value">-</div>
+                        <div class="stat-label">Average Images per Text</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="images-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Links Analysis Section -->
+            <div class="dashboard-card">
+                <h2>Links Analysis</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="internal-links-value">-</div>
+                        <div class="stat-label">Average Internal Links</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="external-links-value">-</div>
+                        <div class="stat-label">Average External Links</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="links-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Industry Distribution Section -->
+            <div class="dashboard-card">
+                <h2>Industry Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="industry-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Product Highlighted Section -->
+            <div class="dashboard-card">
+                <h2>Product Highlighted</h2>
+                <div class="chart-container">
+                    <canvas id="product-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Funnel Stage Section -->
+            <div class="dashboard-card">
+                <h2>Funnel Stage</h2>
+                <div class="chart-container">
+                    <canvas id="funnel-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Product CTA Section -->
+            <div class="dashboard-card">
+                <h2>Product CTA</h2>
+                <div class="chart-container">
+                    <canvas id="cta-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const dashboard = document.getElementById('dashboard');
+        const loadingSection = document.getElementById('loading');
+        const errorContainer = document.getElementById('error-container');
+
+        // Chart instances
+        let imagesChart = null;
+        let linksChart = null;
+        let industryChart = null;
+        let productChart = null;
+        let funnelChart = null;
+        let ctaChart = null;
+
+        // Color palette for charts
+        const colorPalette = [
+            '#FF5A5F', // Primary
+            '#008489', // Success
+            '#FFB400', // Warning
+            '#484848', // Secondary
+            '#767676', // Secondary Light
+            '#FF7A7F', // Primary Light
+            '#E31C5F', // Primary Dark
+            '#222222', // Secondary Dark
+            '#F7F7F7', // Gray 100
+            '#EBEBEB'  // Gray 200
+        ];
+
+        // Chart default options
+        const chartDefaults = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: window.innerWidth < 768 ? 'bottom' : 'right',
+                    labels: {
+                        font: {
+                            family: "'Circular Std', sans-serif",
+                            size: window.innerWidth < 768 ? 10 : 12
+                        },
+                        padding: 20,
+                        boxWidth: window.innerWidth < 768 ? 12 : 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#222222',
+                    bodyColor: '#484848',
+                    borderColor: '#EBEBEB',
+                    borderWidth: 1,
+                    padding: 12,
+                    boxPadding: 6,
+                    usePointStyle: true,
+                    titleFont: {
+                        family: "'Circular Std', sans-serif",
+                        size: 14,
+                        weight: '600'
+                    },
+                    bodyFont: {
+                        family: "'Circular Std', sans-serif",
+                        size: 13
+                    }
+                }
+            }
+        };
+
+        // Load data from JSON file
+        async function loadData() {
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch('./blog_statistics.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                // Validate data structure
+                if (!data.averages || !data.categorical_counts) {
+                    throw new Error('Invalid data structure: missing required fields');
+                }
+                
+                // Process and display data
+                processData(data);
+                
+                // Hide loading, show dashboard
+                showLoading(false);
+                dashboard.classList.remove('hidden');
+                
+                // Trigger resize for charts to render correctly
+                window.dispatchEvent(new Event('resize'));
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError(`Error loading data: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        // Show/hide loading state
+        function showLoading(isLoading) {
+            if (isLoading) {
+                loadingSection.style.display = 'block';
+            } else {
+                loadingSection.style.display = 'none';
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            errorContainer.classList.remove('hidden');
+            errorContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+
+        // Hide error message
+        function hideError() {
+            errorContainer.classList.add('hidden');
+            errorContainer.innerHTML = '';
+        }
+
+        // Process data and create visualizations
+        function processData(data) {
+            // Update stat values
+            document.getElementById('images-per-text-value').textContent = data.averages['Images per text'].toFixed(2);
+            document.getElementById('internal-links-value').textContent = data.averages['Internal Links Count'].toFixed(2);
+            document.getElementById('external-links-value').textContent = data.averages['Outbound Links Count'].toFixed(2);
+
+            // Create charts
+            createImagesChart(data.averages['Images per text']);
+            createLinksChart(data.averages['Internal Links Count'], data.averages['Outbound Links Count']);
+            createIndustryChart(data.categorical_counts.Industry);
+            createProductChart(data.categorical_counts['Product Highlighted']);
+            createFunnelChart(data.categorical_counts['Funnel Stage']);
+            createCTAChart(data.categorical_counts['Product CTA']);
+        }
+
+        // Chart creation functions
+        function createImagesChart(imagesPerText) {
+            const ctx = document.getElementById('images-chart').getContext('2d');
+            
+            if (imagesChart) {
+                imagesChart.destroy();
+            }
+            
+            imagesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Images per Text'],
+                    datasets: [{
+                        label: 'Average Images per Text',
+                        data: [imagesPerText],
+                        backgroundColor: 'rgba(255, 90, 95, 0.2)',
+                        borderColor: '#FF5A5F',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Images per Text Distribution',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 3,
+                            grid: {
+                                color: '#EBEBEB',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createLinksChart(internalLinks, externalLinks) {
+            const ctx = document.getElementById('links-chart').getContext('2d');
+            
+            if (linksChart) {
+                linksChart.destroy();
+            }
+            
+            linksChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Internal Links', 'External Links'],
+                    datasets: [{
+                        label: 'Average Links per Post',
+                        data: [internalLinks, externalLinks],
+                        backgroundColor: [
+                            'rgba(255, 90, 95, 0.2)',
+                            'rgba(0, 132, 137, 0.2)'
+                        ],
+                        borderColor: [
+                            '#FF5A5F',
+                            '#008489'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Average Links Distribution',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#EBEBEB',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createIndustryChart(industryData) {
+            const ctx = document.getElementById('industry-chart').getContext('2d');
+            
+            if (industryChart) {
+                industryChart.destroy();
+            }
+            
+            const labels = Object.keys(industryData);
+            const data = Object.values(industryData);
+            
+            industryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colorPalette.slice(0, labels.length).map(color => `${color}33`),
+                        borderColor: colorPalette.slice(0, labels.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Industry Distribution',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        tooltip: {
+                            ...chartDefaults.plugins.tooltip,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = data.reduce((sum, count) => sum + count, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value} posts (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createProductChart(productData) {
+            const ctx = document.getElementById('product-chart').getContext('2d');
+            
+            if (productChart) {
+                productChart.destroy();
+            }
+            
+            const labels = Object.keys(productData);
+            const data = Object.values(productData);
+            
+            productChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colorPalette.slice(0, labels.length).map(color => `${color}33`),
+                        borderColor: colorPalette.slice(0, labels.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    cutout: '60%',
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Product Highlighted Distribution',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        tooltip: {
+                            ...chartDefaults.plugins.tooltip,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = data.reduce((sum, count) => sum + count, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value} posts (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createFunnelChart(funnelData) {
+            const ctx = document.getElementById('funnel-chart').getContext('2d');
+            
+            if (funnelChart) {
+                funnelChart.destroy();
+            }
+            
+            const labels = Object.keys(funnelData);
+            const data = Object.values(funnelData);
+            
+            funnelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Posts',
+                        data: data,
+                        backgroundColor: colorPalette.slice(0, labels.length).map(color => `${color}33`),
+                        borderColor: colorPalette.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Funnel Stage Distribution',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        tooltip: {
+                            ...chartDefaults.plugins.tooltip,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = data.reduce((sum, count) => sum + count, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value} posts (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#EBEBEB',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCTAChart(ctaData) {
+            const ctx = document.getElementById('cta-chart').getContext('2d');
+            
+            if (ctaChart) {
+                ctaChart.destroy();
+            }
+            
+            const labels = Object.keys(ctaData);
+            const data = Object.values(ctaData);
+            
+            ctaChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 90, 95, 0.2)',
+                            'rgba(0, 132, 137, 0.2)'
+                        ],
+                        borderColor: [
+                            '#FF5A5F',
+                            '#008489'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Product CTA Distribution',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        tooltip: {
+                            ...chartDefaults.plugins.tooltip,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = data.reduce((sum, count) => sum + count, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${value} posts (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Add window resize handler to update charts
+        window.addEventListener('resize', () => {
+            if (imagesChart) createImagesChart(imagesChart.data.datasets[0].data[0]);
+            if (linksChart) createLinksChart(linksChart.data.datasets[0].data[0], linksChart.data.datasets[0].data[1]);
+            if (industryChart) createIndustryChart(Object.fromEntries(industryChart.data.labels.map((label, i) => [label, industryChart.data.datasets[0].data[i]])));
+            if (productChart) createProductChart(Object.fromEntries(productChart.data.labels.map((label, i) => [label, productChart.data.datasets[0].data[i]])));
+            if (funnelChart) createFunnelChart(Object.fromEntries(funnelChart.data.labels.map((label, i) => [label, funnelChart.data.datasets[0].data[i]])));
+            if (ctaChart) createCTAChart(Object.fromEntries(ctaChart.data.labels.map((label, i) => [label, ctaChart.data.datasets[0].data[i]])));
+        });
+
+        // Initialize app
+        function init() {
+            loadData();
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html> 
