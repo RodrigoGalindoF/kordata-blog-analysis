@@ -29,11 +29,17 @@
             
             /* Spacing and sizing */
             --container-padding: clamp(16px, 3vw, 24px);
-            --card-padding: clamp(20px, 4vw, 32px);
+            --card-padding: clamp(16px, 3vw, 24px);
             --chart-height: clamp(250px, 40vh, 300px);
             --border-radius: 12px;
             --card-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
             --transition-speed: 0.2s;
+            
+            /* Typography */
+            --h1-size: clamp(1.75rem, 4vw, 2.25rem);
+            --h2-size: clamp(1.25rem, 3vw, 1.5rem);
+            --body-size: clamp(0.875rem, 2vw, 1rem);
+            --stat-value-size: clamp(1.5rem, 4vw, 2rem);
         }
 
         * {
@@ -72,12 +78,17 @@
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow);
             margin-bottom: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            background-color: rgba(255, 255, 255, 0.95);
         }
 
         h1 {
             color: var(--gray-600);
             margin-bottom: 8px;
-            font-size: clamp(1.75rem, 4vw, 2.25rem);
+            font-size: var(--h1-size);
             font-weight: 600;
             letter-spacing: -0.02em;
         }
@@ -87,6 +98,7 @@
             grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
             gap: clamp(16px, 3vw, 24px);
             padding: var(--container-padding);
+            width: 100%;
         }
 
         .dashboard-card {
@@ -96,6 +108,9 @@
             box-shadow: var(--card-shadow);
             width: 100%;
             transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
         .dashboard-card:hover {
@@ -108,7 +123,7 @@
             margin-bottom: 24px;
             padding-bottom: 16px;
             border-bottom: 1px solid var(--gray-200);
-            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            font-size: var(--h2-size);
             font-weight: 600;
             letter-spacing: -0.01em;
         }
@@ -118,6 +133,7 @@
             height: var(--chart-height);
             width: 100%;
             margin-top: 16px;
+            flex: 1;
         }
 
         .stats-grid {
@@ -125,6 +141,7 @@
             grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
             gap: clamp(16px, 2vw, 24px);
             margin-bottom: 24px;
+            width: 100%;
         }
 
         .stat-card {
@@ -133,14 +150,21 @@
             border-radius: var(--border-radius);
             text-align: center;
             transition: transform var(--transition-speed) ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
+            background-color: var(--surface);
+            box-shadow: var(--card-shadow);
         }
 
         .stat-value {
-            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-size: var(--stat-value-size);
             font-weight: 600;
             color: var(--primary);
             margin: 8px 0;
@@ -149,7 +173,7 @@
 
         .stat-label {
             color: var(--gray-500);
-            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-size: var(--body-size);
             font-weight: 500;
         }
 
@@ -157,6 +181,14 @@
             display: none;
             text-align: center;
             padding: var(--card-padding);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            z-index: 1000;
         }
 
         .spinner {
@@ -178,7 +210,7 @@
             padding: clamp(16px, 3vw, 24px);
             border-radius: var(--border-radius);
             margin-bottom: 24px;
-            font-size: clamp(0.875rem, 2vw, 1rem);
+            font-size: var(--body-size);
             font-weight: 500;
         }
 
@@ -214,7 +246,37 @@
             }
 
             .dashboard-card {
-                padding: 20px;
+                padding: 16px;
+            }
+
+            .stat-card {
+                min-height: 100px;
+            }
+        }
+
+        /* Mobile landscape optimization */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-container {
+                height: 200px;
+            }
+
+            .stat-card {
+                min-height: 90px;
+            }
+        }
+
+        /* Tablet optimization */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-container {
+                height: 280px;
             }
         }
 
@@ -237,13 +299,51 @@
             .chart-container {
                 height: 300px;
             }
+
+            .stat-card {
+                box-shadow: none;
+                border: 1px solid var(--gray-200);
+            }
+        }
+
+        /* High-DPI screens optimization */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .dashboard-card {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #1A1A1A;
+                --surface: #2D2D2D;
+                --gray-100: #2D2D2D;
+                --gray-200: #404040;
+                --gray-300: #4D4D4D;
+                --gray-400: #808080;
+                --gray-500: #A6A6A6;
+                --gray-600: #FFFFFF;
+            }
+
+            .dashboard-card {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+            }
+
+            .stat-card {
+                background-color: var(--surface);
+            }
+
+            .stat-card:hover {
+                background-color: var(--gray-200);
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Blog Statistics Dashboard</h1>
+            <h1>Kordata's Blog - Quick Stats</h1>
         </header>
 
         <div id="loading" class="loading">
@@ -256,15 +356,30 @@
         <div id="dashboard" class="dashboard-grid hidden">
             <!-- Images per Text Section -->
             <div class="dashboard-card">
-                <h2>Images per Text</h2>
+                <h2>Images per Blog Post</h2>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value" id="images-per-text-value">-</div>
-                        <div class="stat-label">Average Images per Text</div>
+                        <div class="stat-label">Average Images per Blog Post</div>
                     </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="images-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Publishing Cadence Section -->
+            <div class="dashboard-card">
+                <h2>Publishing Cadence</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="posts-per-month-value">-</div>
+                        <div class="stat-label">Average Posts per Month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="days-between-posts-value">-</div>
+                        <div class="stat-label">Average Days Between Posts</div>
+                    </div>
                 </div>
             </div>
 
@@ -451,6 +566,8 @@
             document.getElementById('images-per-text-value').textContent = data.averages['Images per text'].toFixed(2);
             document.getElementById('internal-links-value').textContent = data.averages['Internal Links Count'].toFixed(2);
             document.getElementById('external-links-value').textContent = data.averages['Outbound Links Count'].toFixed(2);
+            document.getElementById('posts-per-month-value').textContent = data.averages['Posts per Month'].toFixed(2);
+            document.getElementById('days-between-posts-value').textContent = data.averages['Days Between Posts'].toFixed(2);
 
             // Create charts
             createImagesChart(data.averages['Images per text']);
@@ -472,9 +589,9 @@
             imagesChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Images per Text'],
+                    labels: ['Images per Blog Post'],
                     datasets: [{
-                        label: 'Average Images per Text',
+                        label: 'Average Images per Blog Post',
                         data: [imagesPerText],
                         backgroundColor: 'rgba(255, 90, 95, 0.2)',
                         borderColor: '#FF5A5F',
@@ -489,7 +606,7 @@
                         ...chartDefaults.plugins,
                         title: {
                             display: true,
-                            text: 'Images per Text Distribution',
+                            text: 'Images per Blog Post Distribution',
                             font: {
                                 family: "'Circular Std', sans-serif",
                                 size: window.innerWidth < 768 ? 14 : 16,
