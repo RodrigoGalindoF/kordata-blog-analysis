@@ -405,6 +405,9 @@
                         <div class="stat-label">Average Blog Post Length</div>
                     </div>
                 </div>
+                <div class="chart-container">
+                    <canvas id="length-chart"></canvas>
+                </div>
             </div>
 
             <!-- Images per Blog Post Section -->
@@ -486,6 +489,7 @@
         let productChart = null;
         let funnelChart = null;
         let ctaChart = null;
+        let lengthChart = null;
 
         // Color palette for charts
         const colorPalette = [
@@ -610,6 +614,7 @@
                 document.getElementById('avg-length-value').textContent = data.averages['Average Blog Post Length'].toFixed(0);
             }
             window._chartData = data;
+            setupChartObservers();
         }
 
         // Intersection Observer for chart containers
@@ -644,6 +649,11 @@
                     id: 'cta-chart',
                     created: false,
                     create: () => createCTAChart(window._chartData.categorical_counts['Product CTA'])
+                },
+                {
+                    id: 'length-chart',
+                    created: false,
+                    create: () => createLengthChart(window._chartData.averages['Average Blog Post Length'])
                 }
             ];
 
@@ -1065,6 +1075,74 @@
             });
         }
 
+        function createLengthChart(avgLength) {
+            const ctx = document.getElementById('length-chart').getContext('2d');
+            if (lengthChart) {
+                lengthChart.destroy();
+            }
+            lengthChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Average Length'],
+                    datasets: [{
+                        label: 'Average Blog Post Length',
+                        data: [avgLength],
+                        backgroundColor: 'rgba(0, 132, 137, 0.2)',
+                        borderColor: '#008489',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        title: {
+                            display: true,
+                            text: 'Average Blog Post Length',
+                            font: {
+                                family: "'Circular Std', sans-serif",
+                                size: window.innerWidth < 768 ? 14 : 16,
+                                weight: '600'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#EBEBEB',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Circular Std', sans-serif",
+                                    size: window.innerWidth < 768 ? 10 : 12
+                                },
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // Add window resize handler to update charts
         window.addEventListener('resize', () => {
             if (imagesChart) createImagesChart(imagesChart.data.datasets[0].data[0]);
@@ -1073,6 +1151,7 @@
             if (productChart) createProductChart(Object.fromEntries(productChart.data.labels.map((label, i) => [label, productChart.data.datasets[0].data[i]])));
             if (funnelChart) createFunnelChart(Object.fromEntries(funnelChart.data.labels.map((label, i) => [label, funnelChart.data.datasets[0].data[i]])));
             if (ctaChart) createCTAChart(Object.fromEntries(ctaChart.data.labels.map((label, i) => [label, ctaChart.data.datasets[0].data[i]])));
+            if (lengthChart) createLengthChart(window._chartData.averages['Average Blog Post Length']);
         });
 
         // Initialize app
