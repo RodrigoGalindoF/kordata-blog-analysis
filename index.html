@@ -563,14 +563,14 @@
         // Process data and create visualizations
         function processData(data) {
             // Update stat values
-            document.getElementById('images-per-text-value').textContent = data.averages['Images per text'].toFixed(2);
+            document.getElementById('images-per-text-value').textContent = data.averages['Images per Blog Post'].toFixed(2);
             document.getElementById('internal-links-value').textContent = data.averages['Internal Links Count'].toFixed(2);
             document.getElementById('external-links-value').textContent = data.averages['Outbound Links Count'].toFixed(2);
             document.getElementById('posts-per-month-value').textContent = data.averages['Posts per Month'].toFixed(2);
             document.getElementById('days-between-posts-value').textContent = data.averages['Days Between Posts'].toFixed(2);
 
             // Create charts
-            createImagesChart(data.averages['Images per text']);
+            createImagesChart(data.averages['Images per Blog Post']);
             createLinksChart(data.averages['Internal Links Count'], data.averages['Outbound Links Count']);
             createIndustryChart(data.categorical_counts.Industry);
             createProductChart(data.categorical_counts['Product Highlighted']);
