@@ -338,6 +338,33 @@
                 background-color: var(--gray-200);
             }
         }
+
+        .publishing-cadence-card .publishing-cadence-stats {
+            display: flex;
+            flex-direction: column;
+            height: 300px;
+            min-height: 200px;
+            width: 100%;
+            gap: 0;
+        }
+        .publishing-cadence-card .stat-card {
+            flex: 1 1 50%;
+            width: 100%;
+            min-height: 0;
+            margin-bottom: 0;
+            border-radius: 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .publishing-cadence-card .stat-card:last-child {
+            border-bottom: none;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+        @media (max-width: 768px) {
+            .publishing-cadence-card .publishing-cadence-stats {
+                height: 180px;
+                min-height: 120px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -369,9 +396,9 @@
             </div>
 
             <!-- Publishing Cadence Section -->
-            <div class="dashboard-card">
+            <div class="dashboard-card publishing-cadence-card">
                 <h2>Publishing Cadence</h2>
-                <div class="stats-grid">
+                <div class="publishing-cadence-stats">
                     <div class="stat-card">
                         <div class="stat-value" id="posts-per-month-value">-</div>
                         <div class="stat-label">Average Posts per Month</div>
@@ -569,13 +596,64 @@
             document.getElementById('posts-per-month-value').textContent = data.averages['Posts per Month'].toFixed(2);
             document.getElementById('days-between-posts-value').textContent = data.averages['Days Between Posts'].toFixed(2);
 
-            // Create charts
-            createImagesChart(data.averages['Images per Blog Post']);
-            createLinksChart(data.averages['Internal Links Count'], data.averages['Outbound Links Count']);
-            createIndustryChart(data.categorical_counts.Industry);
-            createProductChart(data.categorical_counts['Product Highlighted']);
-            createFunnelChart(data.categorical_counts['Funnel Stage']);
-            createCTAChart(data.categorical_counts['Product CTA']);
+            // Chart data for observer
+            window._chartData = data;
+            setupChartObservers();
+        }
+
+        // Intersection Observer for chart containers
+        function setupChartObservers() {
+            const chartConfigs = [
+                {
+                    id: 'images-chart',
+                    created: false,
+                    create: () => createImagesChart(window._chartData.averages['Images per Blog Post'])
+                },
+                {
+                    id: 'links-chart',
+                    created: false,
+                    create: () => createLinksChart(window._chartData.averages['Internal Links Count'], window._chartData.averages['Outbound Links Count'])
+                },
+                {
+                    id: 'industry-chart',
+                    created: false,
+                    create: () => createIndustryChart(window._chartData.categorical_counts.Industry)
+                },
+                {
+                    id: 'product-chart',
+                    created: false,
+                    create: () => createProductChart(window._chartData.categorical_counts['Product Highlighted'])
+                },
+                {
+                    id: 'funnel-chart',
+                    created: false,
+                    create: () => createFunnelChart(window._chartData.categorical_counts['Funnel Stage'])
+                },
+                {
+                    id: 'cta-chart',
+                    created: false,
+                    create: () => createCTAChart(window._chartData.categorical_counts['Product CTA'])
+                }
+            ];
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const config = chartConfigs.find(cfg => cfg.id === entry.target.querySelector('canvas').id);
+                        if (config && !config.created) {
+                            config.create();
+                            config.created = true;
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.3
+            });
+
+            chartConfigs.forEach(cfg => {
+                const container = document.getElementById(cfg.id)?.parentElement;
+                if (container) observer.observe(container);
+            });
         }
 
         // Chart creation functions
