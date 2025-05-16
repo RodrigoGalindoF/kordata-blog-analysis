@@ -381,20 +381,6 @@
         <div id="error-container" class="hidden"></div>
 
         <div id="dashboard" class="dashboard-grid hidden">
-            <!-- Images per Text Section -->
-            <div class="dashboard-card">
-                <h2>Images per Blog Post</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="images-per-text-value">-</div>
-                        <div class="stat-label">Average Images per Blog Post</div>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="images-chart"></canvas>
-                </div>
-            </div>
-
             <!-- Publishing Cadence Section -->
             <div class="dashboard-card publishing-cadence-card">
                 <h2>Publishing Cadence</h2>
@@ -407,6 +393,31 @@
                         <div class="stat-value" id="days-between-posts-value">-</div>
                         <div class="stat-label">Average Days Between Posts</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Average Blog Post Length Section -->
+            <div class="dashboard-card">
+                <h2>Average Blog Post Length</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="avg-length-value">-</div>
+                        <div class="stat-label">Average Blog Post Length</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images per Blog Post Section -->
+            <div class="dashboard-card">
+                <h2>Images per Blog Post</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="images-per-text-value">-</div>
+                        <div class="stat-label">Average Images per Blog Post</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="images-chart"></canvas>
                 </div>
             </div>
 
@@ -595,10 +606,10 @@
             document.getElementById('external-links-value').textContent = data.averages['Outbound Links Count'].toFixed(2);
             document.getElementById('posts-per-month-value').textContent = data.averages['Posts per Month'].toFixed(2);
             document.getElementById('days-between-posts-value').textContent = data.averages['Days Between Posts'].toFixed(2);
-
-            // Chart data for observer
+            if (data.averages['Average Blog Post Length']) {
+                document.getElementById('avg-length-value').textContent = data.averages['Average Blog Post Length'].toFixed(0);
+            }
             window._chartData = data;
-            setupChartObservers();
         }
 
         // Intersection Observer for chart containers
