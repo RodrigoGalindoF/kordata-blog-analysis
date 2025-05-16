@@ -1,0 +1,39 @@
+{
+    "total_blog_posts": 362,
+    "averages": {
+        "Images per text": 1.32,
+        "Internal Links Count": 0.87,
+        "Outbound Links Count": 0.76
+    },
+    "categorical_counts": {
+        "Industry": {
+            "Público en General": 135,
+            "Software Administrativo": 110,
+            "Transportistas": 38,
+            "Boutique": 25,
+            "Taller Mecánico": 22,
+            "Servicios Técnicos": 13,
+            "Ferretería": 8,
+            "Farmacias": 5,
+            "Zapataría": 3,
+            "Llantera": 3
+        },
+        "Product Highlighted": {
+            "Ninguno": 192,
+            "Facturación": 67,
+            "Inventarios": 57,
+            "Punto de Venta": 26,
+            "Tienda en Línea": 20
+        },
+        "Funnel Stage": {
+            "TOFU": 174,
+            "MOFU": 174,
+            "BOFU": 12,
+            "No aplicable": 2
+        },
+        "Product CTA": {
+            "Ninguno": 225,
+            "Has CTA": 137
+        }
+    }
+}
